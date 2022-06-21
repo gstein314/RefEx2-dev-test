@@ -8,6 +8,10 @@ export default {
     color: '#488EC4',
     background: 'white',
   },
+  target: 'static',
+  router: {
+    base: '/RefEx2-dev-test/',
+  },
   // Global page headers (https://go.nuxtjs.dev/config-head)
   head: {
     title: 'Refex',
