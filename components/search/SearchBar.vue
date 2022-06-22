@@ -2,7 +2,7 @@
   <!-- v-html setup neccesary for plugin, does NOT use user input/API data and is therefore safe to use -->
   <!-- eslint-disable vue/no-v-html -->
   <div class="text_search_area">
-    <h2>Search searchCondition</h2>
+    <h2>Test Search searchCondition</h2>
     <h3>
       <span class="example"
         >e.g.
