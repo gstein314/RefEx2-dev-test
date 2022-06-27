@@ -48,7 +48,7 @@ export default {
   modules: ['@nuxtjs/style-resources', '@nuxtjs/fontawesome', '@nuxtjs/axios'],
 
   axios: {
-    baseURL: 'https://refex2-api.bhx.jp/',
+    baseURL: 'https://refex2-api.dbcls.jp/',
     retry: {
       retries: 3,
       retryDelay: exponentialDelay,
