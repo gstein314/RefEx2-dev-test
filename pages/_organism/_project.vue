@@ -1,6 +1,11 @@
 <template>
   <div class="wrapper">
-    <div ref="chartWrapper" class="chart_wrapper">
+    <p v-if="isError" class="error">
+      <font-awesome-icon icon="exclamation-triangle" />
+      An error has occured while fecthing the data. Please check wheter the URL
+      contains the correct information.
+    </p>
+    <div v-else ref="chartWrapper" class="chart_wrapper">
       <div class="content">
         <h1 class="header_title">
           <font-awesome-icon
@@ -64,6 +69,12 @@
     column: 'LogMedian',
     label: 'MEDIAN [LOG2(TPM+1)]',
     is_displayed: true,
+    filterModal: '',
+  };
+
+  const description = {
+    column: 'Description',
+    label: 'Description',
     is_displayed: true,
     filterModal: '',
   };
@@ -80,10 +91,9 @@
     beforeRouteUpdate(to, from, next) {
       this.$forceUpdate();
     },
-    // TODO: refactor
-    // TODO: add sample option
     async asyncData({ $axios, query, store, route }) {
       let results;
+      let isError = false;
       const { project, organism } = route.params;
       store.commit('set_specie', organism);
       const { id, type } = query;
@@ -92,6 +102,10 @@
           const data = await $axios.$get(
             `api/${type}/${id}?dataset=${project.toLowerCase()}`
           );
+          if (data[`${type}_info`]?.error) {
+            isError = true;
+          }
+
           if (index === 0) results = data.refex_info;
           return {
             id,
@@ -100,11 +114,12 @@
           };
         })
       );
+      if (isError) return { isError };
       // set filters
       // In case of Gene, use dataset filters (sample values)
       // In case of Sample, use fixed gene filters with exception of geneDataFromGeneInfo (gene values)
       const infoFromCurrentDataset = store.getters.dataset_by_name(project);
-      const filters = [
+      let filters = [
         ...(type === 'gene'
           ? infoFromCurrentDataset['sample']['filter']
           : store.getters.filter_by_name('gene')?.filter || []),
@@ -114,7 +129,6 @@
       const optionsStaticData = await $axios.$get(`api/cv`);
       if (project in optionsStaticData) {
         for (const [key, value] of Object.entries(optionsStaticData[project])) {
-          console.log(optionsStaticData[project]);
           const filterIndex = filters.findIndex(x => x.column === key);
           if (filterIndex > -1) {
             filters[filterIndex].options = value;
@@ -130,11 +144,13 @@
           column: infoFromCurrentDataset.gene.key,
           label: infoFromCurrentDataset.gene.header,
         };
-      filters.splice(1, 0, logMedianFilter);
+      if (type === 'gene') filters = [description, logMedianFilter, ...filters];
+      else filters.splice(1, 0, logMedianFilter);
 
       return {
         filterType: type,
         items,
+        isError,
         geneIdKey: infoFromCurrentDataset.gene.key,
         filters,
         results,
@@ -154,7 +170,6 @@
       };
     },
     computed: {
-      // TODO: see if needs refactoring
       resultsWithMedianData() {
         return this.results.map((result, index) => {
           return {
@@ -179,7 +194,7 @@
           }, []);
       },
       mainItem() {
-        return this.items[0];
+        return this.items[0] || {};
       },
       infoForMainItem() {
         return this.mainItem?.info;
@@ -189,9 +204,12 @@
       },
     },
     mounted() {
-      this.heightChartWrapper = this.$refs.chartWrapper.clientHeight;
+      if (this.isError) return;
       this.$store.commit('set_project_filters', this.filters);
       this.$store.commit('set_project_results', this.resultsWithMedianData);
+    },
+    updated() {
+      this.heightChartWrapper = this.$refs.chartWrapper.clientHeight;
     },
     methods: {
       ...mapMutations({
@@ -212,6 +230,9 @@
       updateSelectedItem({ id, sortOrder = 'down' }) {
         this.selectedId = id;
         this.$refs.results.switchSort('LogMedian', sortOrder);
+        requestAnimationFrame(
+          () => (this.heightChartWrapper = this.$refs.chartWrapper.clientHeight)
+        );
       },
     },
   };
@@ -223,11 +244,22 @@
     min-width: fit-content
     flex-direction: column
     margin-bottom: 50px
+    > .error
+      display: flex
+      color: $ERROR_COLOR
+      justify-content: center
+      align-items: center
+      height: 100%
+      width: 100%
+      font-size: 20px
+      margin: 40px
+      > .fa-exclamation-triangle
+        margin-right: 6px
     .chart_wrapper
       display: flex
       position: sticky
       left: 0
-      min-width: 100vw
+      min-width: calc(100vw - 15px)
       max-width: fit-content
       position: sticky
       background-color: white

@@ -32,6 +32,10 @@ export const state = () => ({
     limit: 10,
     offset: 0,
   },
+  index_pagination: {
+    limit: 10,
+    offset: 0,
+  },
   results: filters.reduce((acc, filter) => {
     acc[filter.name] = { results: [], results_num: 0 };
     return acc;
@@ -48,6 +52,9 @@ export const getters = {
   get_project_pagination(state) {
     const { limit, offset } = state.project_results;
     return { limit, offset };
+  },
+  index_pagination(state) {
+    return state.index_pagination;
   },
   active_filter_modal(state) {
     return (
@@ -90,7 +97,7 @@ export const getters = {
   },
   gene_summary_source: state => resultItem => {
     const datasetName = state.active_dataset.dataset;
-    return `http://refex2-api.bhx.jp/static/${datasetName}/${datasetName}_${resultItem}.png`;
+    return `https://refex2-api.dbcls.jp/static/${datasetName}/${datasetName}_${resultItem}.png`;
   },
 };
 
@@ -98,8 +105,14 @@ export const mutations = {
   set_project_results(state, newResults) {
     state.project_results = { ...state.project_results, arr: newResults };
   },
-  set_project_pagination(state, { limit, offset }) {
-    state.project_results = { ...state.project_results, limit, offset };
+  // type: 'index' or 'project'
+  set_pagination(state, { limit, offset, type = 'project' }) {
+    if (type === 'index')
+      state.index_pagination = {
+        limit: limit ?? state.index_pagination.limit,
+        offset,
+      };
+    else state.project_results = { ...state.project_results, limit, offset };
   },
   set_filter_modal(state, filterKey = null) {
     state.filter_modal = filterKey;
@@ -114,7 +127,10 @@ export const mutations = {
       const column = entry.column;
       if (Object.keys(state.project_filter_ranges).includes(column)) {
         paramsToBeMerged = numberFilterObj(state.project_filter_ranges[column]);
-      } else paramsToBeMerged = { filterModal: '' };
+      } else if (entry.options) {
+        const options = [...entry.options];
+        paramsToBeMerged = { filterModal: options, options };
+      } else paramsToBeMerged = { filterModal: entry.options ? [] : '' };
       copy[index] = { ...entry, ...paramsToBeMerged };
     });
     state.project_filters = copy;
@@ -131,9 +147,9 @@ export const mutations = {
   set_gene_modal(state, id = null) {
     state.gene_modal = id;
   },
-  set_alert_modal(state, { msg = '' }) {
-    (state.alert_modal.isOn = !state.alert_modal.isOn),
-      (state.alert_modal.msg = msg);
+  set_alert_modal(state, { msg = '', bool = true }) {
+    state.alert_modal.msg = msg;
+    state.alert_modal.isOn = bool;
   },
   set_specie(state, specieId) {
     state.active_specie = specieSets.find(
@@ -153,7 +169,7 @@ export const mutations = {
     state.results = {
       ...state.results,
       [filterType]: {
-        results: results ?? state.results[filterType].results,
+        results: results ?? [],
         results_num,
       },
     };

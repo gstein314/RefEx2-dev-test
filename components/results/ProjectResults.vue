@@ -81,7 +81,7 @@
 <script>
   import TableHeader from '~/components/results/TableHeader.vue';
   import { mapGetters, mapMutations } from 'vuex';
-  import ResultsPagination from './ResultsPagination.vue';
+  import ResultsPagination from '~/components/results/ResultsPagination.vue';
 
   const inRange = (x, [min, max]) => {
     return typeof x !== 'number' || (x - min) * (x - max) <= 0;
@@ -144,7 +144,13 @@
             let isFiltered = false;
             for (const filter of this.filters) {
               const key = filter.column;
+
               if (!filter.is_displayed) continue;
+              // options filter
+              else if (filter.options) {
+                if (!filter.filterModal.includes(result[key]))
+                  isFiltered = true;
+              }
               // number filter
               else if (
                 typeof filter.filterModal === 'number' ||
@@ -163,9 +169,7 @@
               // text filter
               else if (filter.filterModal !== '' && !isFiltered) {
                 // excact match if filter is based on API options
-                const isMatch = filter.options
-                  ? result[key] === filter.filterModal
-                  : result[key].includes(filter.filterModal);
+                const isMatch = result[key].includes(filter.filterModal);
                 isFiltered = filter.filterModal !== '' && !isMatch;
               }
             }
@@ -199,8 +203,6 @@
                 }
             }
           });
-        // TODO: improve usage of offset and limit
-        //.slice(this.paginationObject.offset, this.paginationObject.limit)
       },
       pageItems() {
         return this.filteredData.slice(
