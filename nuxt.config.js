@@ -9,9 +9,6 @@ export default {
     background: 'white',
   },
   target: 'static',
-  router: {
-    base: '/RefEx2-dev-test/',
-  },
   // Global page headers (https://go.nuxtjs.dev/config-head)
   head: {
     title: 'Refex',
@@ -25,7 +22,11 @@ export default {
   },
 
   // Global CSS (https://go.nuxtjs.dev/config-css)
-  css: ['normalize.css', '@fortawesome/fontawesome-svg-core/styles.css'],
+  css: [
+    'normalize.css',
+    '~/assets/css/fontawesome_styles.css',
+    'vue-multiselect/dist/vue-multiselect.min.css',
+  ],
 
   styleResources: {
     sass: ['~/assets/css/mixin.sass'],
@@ -61,7 +62,7 @@ export default {
     icons: {
       solid: true,
     },
-    addCss: true,
+    addCss: false,
   },
   // Build Configuration (https://go.nuxtjs.dev/config-build)
   build: {
@@ -78,15 +79,10 @@ export default {
         });
       });
       return routes;
-      // return client.getEntries({
-      //   'content_type': 'category'
-      // }).then((categories) => {
-      //   return [...categories.items.map(category => `/news/category/${category.sys.id}`)]
-      // })
     },
   },
 
-  //router: {
-  //  base: process.env.NODE_ENV === 'dev' ? '/' : '/dbcls/refex/',
-  //},
+  router: {
+    base: process.env.NODE_ENV === 'dev' ? '/' : '/RefEx2-dev-test/',
+  },
 };
