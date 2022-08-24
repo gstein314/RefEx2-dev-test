@@ -2,7 +2,7 @@ import datasets from './refex-sample/datasets.json';
 import { exponentialDelay } from 'axios-retry';
 
 const isProduction = process.env.NODE_ENV == 'production';
-const href = isProduction ? '/<reponame>/favicon.ico' : '/favicon.ico';
+const href = isProduction ? '/RefEx2-dev-test/favicon.ico' : '/favicon.ico';
 
 export default {
   ssr: false,
